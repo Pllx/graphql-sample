@@ -2,6 +2,7 @@ var React = require('react');
 var $ = require('jQuery');
 var AddFriend = require('./AddFriend');
 var RemoveFriend = require('./RemoveFriend');
+var GetFriends = require('./GetFriends');
 
 var Page = React.createClass({
 
@@ -163,6 +164,7 @@ render: function() {
           </p>
           <AddFriend/>
           <RemoveFriend/>
+          <GetFriends/>
 	      </div>
 	    )
   }
