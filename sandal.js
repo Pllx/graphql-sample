@@ -49,8 +49,11 @@ function Sandal(schema,uri){
 
   //convert extracted schemas into sequelize schemas, returns pairs of names and sequelize schema objects
   //sequelizeSchemas: [['user',{name:[obj],age[obj]}],['blogpost',{title:[obj],author:[obj]}]]
-  var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
 
+  console.log('GraphQLModelNames: ', GraphQLModelNames);
+  console.log('schema._typeMap: ', schema._typeMap);
+  var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
+  console.log('sequelizeSchemas: ', sequelizeSchemas);
   //initialize all user defined GraphQL models in sequelize with names and
   //corresponding sequelize schema objects
   //models are stored in tables object. eg. tables['User'] returns 'user' table
