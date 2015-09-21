@@ -1,4 +1,4 @@
-import express from 'express';
+ import express from 'express';
 import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
 import {graphql, GraphQLList} from 'graphql';
@@ -51,10 +51,9 @@ function Sandal(schema,uri){
   //convert extracted schemas into sequelize schemas, returns pairs of names and sequelize schema objects
   //sequelizeSchemas: [['user',{name:[obj],age[obj]}],['blogpost',{title:[obj],author:[obj]}]]
 
-  console.log('GraphQLModelNames: ', GraphQLModelNames);
-  console.log('schema._typeMap: ', schema._typeMap);
+
   var sequelizeSchemas = convertSchema(GraphQLModelNames, schema._typeMap);
-  console.log('sequelizeSchemas: ', sequelizeSchemas);
+
   //initialize all user defined GraphQL models in sequelize with names and
   //corresponding sequelize schema objects
   //models are stored in tables object. eg. tables['User'] returns 'user' table
@@ -135,7 +134,7 @@ function createGetters(modelNames, typeMap, queryFields){
     var getterName;
     var getterNamePlural;
     var modelFields = typeMap[modelNames[i]]._fields;
-
+    
     for (var field in modelFields){ //fields: name, age...
         var tempObj = {};
         tempObj[field] = field;
@@ -325,5 +324,9 @@ function initSequelizeRelations(relations){
     tables[table1Name].belongsToMany(tables[table2Name],{as : relationName, through: relationTableName});
   }
 }
+function inc(num) {
+  return num+1;
+}
 
+Sandal.inc = inc;
 module.exports = Sandal;

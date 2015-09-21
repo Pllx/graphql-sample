@@ -1,42 +1,9 @@
-var expect = chai.expect;
-describe('createGetters()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
+casper.test.begin('GraphQL Tests', 1, function suite(test) {
+    casper.start("http://localhost:3000", function() {
+        test.assertTitle("GraphQL-Sequelize", "title is the one expected");
     });
-});
 
-describe('sequelizeSchemas()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
-    });
-});
-
-describe('convertSchema()', function() {
-    it('should ', function() {
-      expect().to.eq();
-    });
-});
-
-describe('initSequelizeModels()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
-    });
-});
-
-describe('initSequelizeRelations()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
-    });
-});
-
-describe('graphQLHandler()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
-    });
-});
-
-describe('Sandal()', function() {
-    it('should return all users with input age', function() {
-   expect().to.eq();
+    casper.run(function() {
+        test.done();
     });
 });
