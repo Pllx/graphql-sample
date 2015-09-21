@@ -131,53 +131,60 @@ function createGetters(modelNames, typeMap, queryFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var getterName;
-    var getterNamePlural;
+    var getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+    var getterNamePlural = getterName+'s';
     var modelFields = typeMap[modelNames[i]]._fields;
-    
+    getterName = 'get'+capitalizedName;//+'By'+field.charAt(0).toUpperCase()+field.slice(1);
+    var args  = [];
     for (var field in modelFields){ //fields: name, age...
-        var tempObj = {};
-        tempObj[field] = field;
-        //getterName = 'getUserByName, getUserByAge...'
-        getterName = 'get'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-
-        //singular
-        queryFields[getterName] = {
-          type: typeMap[modelNames[i]]
-        };
-        //TODO: single getUser without ByName etc. allow all args. if one is defined,
-        // use switch statements in resolve to choose which findOne to use
-        queryFields[getterName].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        queryFields[getterName].resolve = (root, args)=>{
-          return tables[capitalizedName]
-              .findOne({
-                where: args //e.g. { name : 'Ken' }
-              });
-        };
-
-        //plural
-        getterNamePlural = 'get'+capitalizedName+'sBy'+field.charAt(0).toUpperCase()+field.slice(1);
-        queryFields[getterNamePlural] = {
-          type: new GraphQLList(typeMap[modelNames[i]])
-        };
-        queryFields[getterNamePlural].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        queryFields[getterNamePlural].resolve = (root, args)=>{
-          return tables[capitalizedName]
-              .findAll({
-                where: args //e.g. { name : 'Ken' }
-              });
-        };
+      var argObject = {
+        name: field,
+        type: typeMap[modelFields[field].type.name],
+        description: null,
+        defaultValue: null
+      };
+      args.push(argObject);
     }
+
+    //singular, e.g. getUser
+    queryFields[getterName] = {
+      type: typeMap[modelNames[i]]
+    };
+
+    queryFields[getterName].args = args;
+
+    queryFields[getterName].resolve = (root, args)=>{
+      var selectorObj= {};
+      for (var key in args){
+        if (args[key] !== undefined){
+          selectorObj[key]= args[key];
+        }
+      }
+      return tables[capitalizedName]
+          .findOne({
+            where: selectorObj //e.g. { name : 'Ken' }
+          });
+    };
+
+    //plural, e.g. getUsers
+    queryFields[getterNamePlural] = {
+      type: new GraphQLList(typeMap[modelNames[i]])
+    };
+
+    queryFields[getterNamePlural].args = args;
+
+    queryFields[getterNamePlural].resolve = (root, args)=>{
+      var selectorObj= {};
+      for (var key in args){
+        if (args[key] !== undefined){
+          selectorObj[key]= args[key];
+        }
+      }
+      return tables[capitalizedName]
+          .findAll({
+            where: selectorObj //e.g. { name : 'Ken' }
+          });
+    };
   }
 }
 
@@ -222,38 +229,37 @@ function createDestroyers(modelNames, typeMap, mutationFields){
   for(var i = 0; i < modelNames.length; i++){
     //'user' -> 'User'
     var capitalizedName = modelNames[i].charAt(0).toUpperCase()+modelNames[i].slice(1);
-    var destroyerName;
+    var destroyerName = 'destroy'+capitalizedName;
     var modelFields = typeMap[modelNames[i]]._fields;
+    var args = [];
 
     for (var field in modelFields){ //fields: name, age...
-        var tempObj = {};
-        tempObj[field] = field;
-        //destroyerName = 'destroyUserByName, destroyUserByAge...'
-        destroyerName = 'destroy'+capitalizedName+'By'+field.charAt(0).toUpperCase()+field.slice(1);
-
-        //singular
-        mutationFields[destroyerName] = {
-          type: typeMap[modelNames[i]]
+      var argObj = {
+          name: field,
+          type: typeMap[modelFields[field].type.name],
+          description: null,
+          defaultValue: null
         };
-        //TODO: single getUser without ByName etc. allow all args. if one is defined,
-        // use switch statements in resolve to choose which findOne to use
-        mutationFields[destroyerName].args = [{
-            name: field,
-            type: typeMap[modelFields[field].type.name],
-            description: null,
-            defaultValue: null
-          }];
-        mutationFields[destroyerName].resolve = (root, args)=>{
-          console.log('reached destroyer');
-          return tables[capitalizedName]
-          .findOne({
-            where: args
-          })
-            .destroy({
-              where: args
-            })
-        };
+        args.push(argObj);
     }
+    mutationFields[destroyerName] = {
+      type: typeMap[modelNames[i]]
+    };
+
+    mutationFields[destroyerName].args = args;
+
+    mutationFields[destroyerName].resolve = (root, args)=>{
+      var deletedObject = tables[capitalizedName]
+        .findOne({
+          where: args
+        }).then(function(data){
+          return data;
+        });
+      tables[capitalizedName].destroy({
+        where: args
+      })
+      return deletedObject;
+    };
   }
 }
 
@@ -277,16 +283,17 @@ function createUpdaters(modelNames, typeMap, mutationFields){
         defaultValue: null
       };
       args.push(argsObj);
+      var argsObjSelector = {
+        name: "_"+field,
+        type: typeMap[modelFields[field].type.name],
+        description: null,
+        defaultValue: null
+      };
+      args.push(argsObjSelector);
     }
-    var argsObj = {
-      name: 'selector',
-      type: typeMap.String,
-      description: 'Specifies which argument is the selector',
-      defaultValue: null
-    };
-    args.push(argsObj);
 
     mutationFields[updaterName].args = args;
+    //console.log(mutationFields[updaterName].args);
     //console.log('mutationFields[updaterName]',mutationFields[updaterName]);
 
     mutationFields[updaterName].resolve = (root,args)=>{
@@ -295,17 +302,25 @@ function createUpdaters(modelNames, typeMap, mutationFields){
       var selectorObj = {};
       var updatedObj = {};
 
+      //expect 1 of the underscored vars to be defined. make it selector
+      //should work for multiple selectors
       for(var key in args){
-        if(key !== args.selector && key !== 'selector') updatedObj[key] = args[key];
+        //if(key.charAt(0) === '_' && args[key] !== undefined) selectorObj[key.slice(1)] = args[key];
+        if(args[key] !== undefined){
+          if(key.charAt(0) === '_') selectorObj[key.slice(1)] = args[key];
+          else updatedObj[key] = args[key];
+        }
       }
-      selectorObj[args.selector] = args[args.selector];
-
-        tables[capitalizedName].update(
+      //rest that are defined and are not _, make them updatedObj
+      //TODO: possibly findOne and update
+      return tables[capitalizedName].update(
           updatedObj,
           {where:
             selectorObj
           }
-        )
+        ).then(function(data){
+          //do what you want with the returned data
+        });
     }
   }
 }

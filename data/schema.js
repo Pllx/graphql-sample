@@ -17,7 +17,7 @@ let userType = new GraphQLObjectType({
       'friends' : {
         type: new GraphQLList(userType),
         description: 'Returns friends of the user. Returns empty array if user has no friends',
-      } //end of 'friends'
+      }
     })
 });
 
@@ -34,7 +34,11 @@ let Query = new GraphQLObjectType({
   name: 'query',
   description: 'this is the root query',
   fields: {
-    //TODO: Currently a dummy to make compilable. Make a useful function e.g. introspect available queries
+    //TODO:
+    // Currently a dummy to make compilable. Make a useful function
+    // e.g. introspect available queries
+    // Needs to take in userType, blogpostType etc
+    // so it is connected to schema
     presetFunctions:{type: userType},
   }
 });
