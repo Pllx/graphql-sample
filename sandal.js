@@ -3,10 +3,12 @@ import bodyParser from 'body-parser';
 import Sequelize from 'sequelize';
 import {graphql, GraphQLList} from 'graphql';
 import util from 'util';
+import Schema from './data/schema.js';
 
 let app = express();
 var tables = {}; //holds our sequelize tables
 var relationsArray = [];
+var GraphQLModelNames = [];
 
 console.log('Sandal is running');
 
@@ -43,9 +45,11 @@ function Sandal(schema,uri){
   //extract user defined GraphQL schemas that we want to convert into sequelize schemas
   //we filter out the non-user defined ones by comparing them to defaultNames
   var defaultNames = ['String', 'query', 'Int', 'mutation', 'Boolean'];
-  var GraphQLModelNames = Object.keys(schema._typeMap).filter(function(elem) {
+  GraphQLModelNames = Object.keys(schema._typeMap).filter(function(elem) {
     return defaultNames.indexOf(elem) < 0 && (elem[0] !== '_' || elem[1] !== '_');
   });
+  // this.GraphQLModelNames = GraphQLModelNames;
+
   //GraphQLModelNames : ['String', 'user', 'Int' ...]
 
   //convert extracted schemas into sequelize schemas, returns pairs of names and sequelize schema objects
@@ -74,6 +78,7 @@ function Sandal(schema,uri){
   //initialize sequelize relations TODO: currently works for belongsToMany
   initSequelizeRelations(relationsArray);
 
+
   sequelize.sync();
 
   //console.log(util.inspect(QUERY_FIELDS.getUser.args, {showHidden: false, depth :null} ));
@@ -82,6 +87,7 @@ function Sandal(schema,uri){
     graphQLHandler(req, res, schema);
   }
 }
+console.log("sandal:  " + Sandal(Schema, 'postgres://localhost/test'));
 
 function initSequelizeModels(sequelizeSchemas, sequelize){
   // take each schema, get its toUppercase name
@@ -344,4 +350,14 @@ function inc(num) {
 }
 
 Sandal.inc = inc;
+Sandal.convertSchema = convertSchema;
+Sandal.typeMap = Schema._typeMap;
+Sandal.initSequelizeModels = initSequelizeModels;
+Sandal.createGetters = createGetters;
+Sandal.createAdders = createAdders;
+Sandal.createUpdaters = createUpdaters;
+Sandal.createDestroyers = createDestroyers;
+Sandal.initSequelizeRelations = initSequelizeRelations;
+Sandal.GraphQLModelNames = GraphQLModelNames;
+
 module.exports = Sandal;
